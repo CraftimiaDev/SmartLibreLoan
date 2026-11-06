@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defence & Home Owner Budget Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        defence: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            gold: '#d97706',
+                            emerald: '#059669'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Visualisations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Custom scrollbars & smooth transitions */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .number-input-no-spinners::-webkit-inner-spin-button,
+        .number-input-no-spinners::-webkit-outer-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        .number-input-no-spinners { -moz-appearance: textfield; }
+        
+        /* Smooth details dropdown animation */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased bg-slate-900 text-slate-100">
+
+    <!-- STARTUP WELCOME MODAL -->
+    <div id="welcome-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center space-x-3 border-b border-slate-800 pb-3">
+                <div class="p-2.5 bg-sky-600/20 rounded-xl border border-sky-500/30 text-sky-400">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base">Welcome to the Calculator</h3>
+                    <p class="text-xs text-slate-400">Independent Community Project</p>
+                </div>
+            </div>
+            
+            <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+                <p>Hi there!</p>
+                <p>
+                    I built this calculator as an independent, open-source community tool to help ADF members and home buyers accurately model cash flows, holding costs, and amortization schedules.
+                </p>
+                <p>
+                    Because this is hosted on a free platform due to funding limits, I understand it might look a bit unconventional at first glance. I want to assure you: this tool has been built using pure client-side code, meaning your personal data, loan figures, and calculations are processed strictly within your own browser.
+                </p>
+                <p class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-sky-300">
+                    <i class="fa-solid fa-code-branch mr-1"></i> This is a completely transparent, open-source project. My ultimate goal is to grow this platform, move it to dedicated infrastructure, and collaborate with others to keep making detailed financial tools highly accessible for our community.
+                </p>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800 flex justify-end">
+                <button onclick="toggleModal('welcome-modal')" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl shadow transition flex items-center gap-2">
+                    <span>Got it, let's calculate</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP HEADER & PRIVACY BANNER -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur relative z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-gradient-to-tr from-sky-600 to-emerald-600 rounded-xl shadow-lg shadow-sky-900/30">
+                    <i class="fa-solid me-0 fa-shield-halved text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Defence & Property Cashflow Engine
+                    </h1>
+                    <p class="text-xs text-slate-400">Interactive Holding Cost, DHOAS & Amortisation Calculator</p>
+                </div>
+            </div>
+
+            <!-- Header Badges & Actions -->
+            <div class="flex items-center flex-wrap gap-2 text-xs">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/60 shadow-sm">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                    100% Client-Side Private
+                </span>
+
+                <a href="https://buymeacoffee.com/craftimia.dev" target="_blank" rel="noopener noreferrer" 
+                   class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-mug-hot"></i>
+                    <span>Buy Me a Coffee</span>
+                </a>
+
+                <button onclick="toggleModal('feedback-modal')" 
+                        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-regular fa-comment-dots"></i>
+                    <span>Feedback</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY LAYOUT -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- SECURITY & ZERO DATA STORED BANNER -->
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs sm:text-sm">
+            <div class="flex items-start space-x-3">
+                <i class="fa-solid fa-lock text-sky-400 text-lg mt-0.5"></i>
+                <div>
+                    <strong class="text-slate-200 block sm:inline">Zero Data Transmission Guarantee:</strong>
+                    <span class="text-slate-400"> All financial entries, DHOAS rates, and income figures run exclusively inside your browser's memory. No data is stored, tracked, or sent to external servers.</span>
+                </div>
+            </div>
+            <button onclick="toggleModal('disclaimer-modal')" class="text-sky-400 hover:text-sky-300 underline font-medium whitespace-nowrap">
+                View Full Regulatory Disclaimers
+            </button>
+        </div>
+
+        <!-- KPI SUMMARY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- DYNAMIC CASH FLOW CARD WITH STATUS TICK / WARNING -->
+            <div id="card-surplus-container" class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md transition-all">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex justify-between items-center">
+                    <span id="kpi-cashflow-title">Net Monthly Cashflow</span>
+                    <div id="cashflow-status-icon-wrapper" class="flex items-center">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+                <!-- Single View Container (Live-In or Immediate Rented Out) -->
+                <div id="kpi-single-view" class="pt-1">
+                    <div id="kpi-single-surplus" class="text-2xl font-bold text-emerald-400">$0 / mo</div>
+                    <div class="text-xs text-slate-400 mt-1">Inflows minus Outflows</div>
+                </div>
+                <!-- Split View Container (Phased Transition) -->
+                <div id="kpi-split-view" class="grid grid-cols-2 gap-2 border-t border-slate-700/60 pt-2 hidden">
+                    <div>
+                        <span id="label-split-live" class="text-[11px] text-slate-400 block font-medium">Live-In</span>
+                        <div id="kpi-livein-surplus" class="text-lg font-bold text-emerald-400">$0 / mo</div>
+                    </div>
+                    <div class="border-l border-slate-700/60 pl-2">
+                        <span id="label-split-rent" class="text-[11px] text-slate-400 block font-medium">Rented Out</span>
+                        <div id="kpi-post-surplus" class="text-lg font-bold text-emerald-400">$0 / mo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STANDALONE HOLDING COSTS CARD -->
+            <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
+                    <span>Monthly Holding Costs</span>
+                    <i class="fa-solid fa-building-columns text-sky-400"></i>
+                </div>
+                <div id="kpi-holding-costs" class="text-2xl font-bold text-sky-300">$0 / mo</div>
+                <div class="text-xs text-slate-400 mt-1">Strata + Rates + Water + Insurance</div>
+            </div>
+
+            <!-- DHOAS SUBSIDY CREDIT CARD -->
+            <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
+                    <span>DHOAS Subsidy Credit</span>
+                    <i class="fa-solid fa-award text-amber-400"></i>
+                </div>
+                <div id="kpi-dhoas-subsidy" class="text-2xl font-bold text-amber-400">$0 / mo</div>
+                <div id="kpi-dhoas-freq-breakdown" class="text-xs text-amber-300/80 mt-1">$0 / wk added to principal</div>
+            </div>
+
+            <!-- TIME & INTEREST SAVED CARD -->
+            <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-md">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
+                    <span>Time & Interest Saved</span>
+                    <i class="fa-solid fa-piggy-bank text-emerald-400"></i>
+                </div>
+                <div id="kpi-interest-saved" class="text-2xl font-bold text-emerald-300">$0 total</div>
+                <div id="kpi-time-saved" class="text-xs text-slate-400 mt-1">Paid off 0 yrs early</div>
+            </div>
+        </div>
+
+        <!-- MAIN GRID: INPUTS (LEFT) vs ANALYTICS (RIGHT) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- INPUTS PANEL (5 COLS) -->
+            <div class="lg:col-span-5 space-y-6">
+
+                <!-- 1. MODE TOGGLE & INCOME -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700/80 space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-sky-400"></i> Occupancy & Income
+                        </h2>
+                        <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-700 text-xs font-medium">
+                            <button id="btn-mode-owner" onclick="setOccupancyMode('owner')" 
+                                    class="px-3 py-1.5 rounded-lg transition-all font-semibold bg-sky-600 text-white shadow">
+                                Live In
+                            </button>
+                            <button id="btn-mode-rented" onclick="setOccupancyMode('rented')" 
+                                    class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white">
+                                Rented Out
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Income Frequency Selector -->
+                    <div class="flex justify-between items-center bg-slate-900 p-2 rounded-xl border border-slate-700 text-xs">
+                        <span class="text-slate-300 font-medium">Income Calculation Basis:</span>
+                        <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+                            <button id="btn-income-monthly" onclick="setIncomeFreq('monthly')" class="px-2.5 py-1 rounded bg-sky-600 text-white font-semibold">Monthly (After Tax)</button>
+                            <button id="btn-income-fortnightly" onclick="setIncomeFreq('fortnightly')" class="px-2.5 py-1 rounded text-slate-400">Fortnightly (After Tax)</button>
+                        </div>
+                    </div>
+
+                    <!-- Income Fields -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label id="label-net-salary" class="block text-xs text-slate-400 mb-1">Net Base Salary ($/mo)</label>
+                            <input type="number" id="inp-net-salary" value="6500" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label id="label-allowances" class="block text-xs text-slate-400 mb-1">Allowances ($/mo)</label>
+                            <input type="number" id="inp-allowances" value="400" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Rented Out / Rental Options & Transition Trigger -->
+                    <div id="rental-inputs-block" class="space-y-3 pt-3 border-t border-slate-700/60 hidden">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">Rental Income & Yield</span>
+                            <span id="kpi-gross-yield" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/80">
+                                Gross Yield: 0.00%
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Weekly Rent ($)</label>
+                                <input type="number" id="inp-weekly-rent" value="650" oninput="calculateAll()" 
+                                       class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Mgt Fee (%)</label>
+                                <input type="number" id="inp-mgt-fee" value="7.0" step="0.5" oninput="calculateAll()" 
+                                       class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Vacancy (Wks/Yr)</label>
+                                <input type="number" id="inp-vacancy-weeks" value="2" oninput="calculateAll()" 
+                                       class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Auto Transition Cycle Selector -->
+                        <div class="pt-2 border-t border-slate-800 space-y-2">
+                            <div>
+                                <label class="block text-xs text-amber-400 font-medium mb-1"><i class="fa-solid fa-house-laptop"></i> Investment Transition Trigger</label>
+                                <select id="inp-posting-trigger" onchange="calculateAll()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                                    <option value="0">Rented Out Immediately (Yr 0)</option>
+                                    <option value="1">Rented Out after 1 Yr</option>
+                                    <option value="2" selected>Rented Out after 2 Yrs</option>
+                                    <option value="3">Rented Out after 3 Yrs</option>
+                                    <option value="5">Rented Out after 5 Yrs</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Rental Income Destination Option Box -->
+                            <div>
+                                <label class="block text-xs text-sky-400 font-medium mb-1">Net Rent Cashflow Destination</label>
+                                <select id="inp-rent-destination" onchange="calculateAll()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200">
+                                    <option value="principal">1. Direct surplus rental income into loan principal after holding costs</option>
+                                    <option value="offset">2. Direct surplus into offset after holding costs</option>
+                                    <option value="general" selected>3. Keep rental surplus after holding costs directed into cashflow</option>
+                                </select>
+                                <p class="text-[11px] text-slate-400 mt-1">Controls whether extra rental returns accelerate mortgage principal, build offset, or boost pocket cash.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. LOAN & DHOAS SETTINGS (COLLAPSIBLE DHOAS DRAWER) -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700/80 space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-house-circle-check text-emerald-400"></i> Loan & DHOAS Settings
+                        </h2>
+                        <a href="https://www.dhoas.gov.au/subsidy-calculator.html" target="_blank" rel="noopener noreferrer"
+                           class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1">
+                           DHOAS Calculator <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+
+                    <!-- Purchase Price & Deposit -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Purchase Price ($)</label>
+                            <input type="number" id="inp-property-value" value="750000" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Deposit Amount ($)</label>
+                            <input type="number" id="inp-deposit-amount" value="150000" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Calculated Gross Loan Balance Banner -->
+                    <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-700/80 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Calculated Gross Loan Balance:</span>
+                        <span id="display-gross-loan" class="font-bold text-sky-300 text-sm">$600,000</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Interest Rate (%)</label>
+                            <input type="number" id="inp-interest-rate" value="6.15" step="0.05" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Term (Years)</label>
+                            <input type="number" id="inp-loan-term" value="30" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Current Offset ($)</label>
+                            <input type="number" id="inp-offset-balance" value="25000" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Repayment Frequency Selector -->
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-700/80 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-semibold text-slate-300">Repayment Frequency</label>
+                            <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+                                <button id="btn-freq-monthly-repay" onclick="setRepayFreq('monthly')" class="px-2 py-0.5 rounded text-slate-400">Monthly</button>
+                                <button id="btn-freq-fortnightly-repay" onclick="setRepayFreq('fortnightly')" class="px-2 py-0.5 rounded text-slate-400">Fortnightly</button>
+                                <button id="btn-freq-weekly-repay" onclick="setRepayFreq('weekly')" class="px-2 py-0.5 rounded bg-sky-600 text-white font-semibold">Weekly</button>
+                            </div>
+                        </div>
+
+                        <!-- Computed Dynamic Repayment Output -->
+                        <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-800">
+                            <span class="text-slate-400">Calculated Loan Cost:</span>
+                            <span id="display-dynamic-repayment" class="font-bold text-emerald-400">$895 / wk</span>
+                        </div>
+                        <div id="dhoas-subsidy-breakdown-row" class="flex justify-between items-center text-xs text-amber-400 pt-0.5">
+                            <span>DHOAS Subsidy Added:</span>
+                            <span id="display-dhoas-freq-subsidy" class="font-bold">+$0 / wk</span>
+                        </div>
+                    </div>
+
+                    <!-- COLLAPSIBLE DHOAS SETTINGS DRAWER -->
+                    <div class="p-3 rounded-xl bg-slate-950 border border-amber-500/30">
+                        <details class="group">
+                            <summary class="flex justify-between items-center cursor-pointer font-medium text-amber-400 text-xs select-none">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-award"></i> Configure DHOAS Subsidy & Entitlement Duration
+                                </span>
+                                <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-[10px]"></i>
+                            </summary>
+                            <div class="mt-3 pt-3 border-t border-slate-800 space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">DHOAS Tier Level</label>
+                                    <select id="inp-dhoas-tier" onchange="calculateAll()" class="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-2 text-slate-200">
+                                        <option value="0" selected>No DHOAS Subsidy</option>
+                                        <option value="1">Tier 1 (40% AHP - Limit $455,622)</option>
+                                        <option value="2">Tier 2 (60% AHP - Limit $683,433)</option>
+                                        <option value="3">Tier 3 (80% AHP - Limit $911,244)</option>
+                                        <option value="4">Dual ADF Couple (100% AHP - Limit $1,139,055)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Monthly Subsidy ($/mo)</label>
+                                    <input type="number" id="inp-dhoas-custom-subsidy" value="0" oninput="calculateAll()" 
+                                           class="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-3 py-2 font-bold text-amber-400 focus:outline-none"
+                                           placeholder="Enter DHOAS Calc Amount">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Entitlement Duration (Years)</label>
+                                    <input type="number" id="inp-dhoas-years" value="8" min="1" max="30" oninput="calculateAll()"
+                                           class="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-3 py-2 text-slate-200 focus:outline-none">
+                                    <p class="text-[10px] text-slate-400 mt-1">Please look up your exact entitlements with DHOAS.</p>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Weekly Contributions -->
+                    <div class="pt-2 border-t border-slate-700/60 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Weekly Extra Repay ($)</label>
+                            <input type="number" id="inp-extra-repayment-weekly" value="0" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Weekly Offset Add ($)</label>
+                            <input type="number" id="inp-offset-contribution-weekly" value="0" oninput="calculateAll()" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-1">
+                        <input type="checkbox" id="inp-reinvest-dhoas" checked onchange="calculateAll()" 
+                               class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-900 border-slate-700">
+                        <label for="inp-reinvest-dhoas" class="text-xs text-slate-300 leading-tight">
+                            Auto-reinvest DHOAS subsidy directly into mortgage principal
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. ITEMIZED HOLDING COSTS (BENCHMARKS OUTSIDE, CUSTOMISE INSIDE) -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700/80 space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-file-invoice-dollar text-amber-400"></i> Itemised Holding Costs
+                        </h2>
+                        <button onclick="toggleModal('explainer-modal')" class="text-xs text-sky-400 hover:text-sky-300 underline font-medium">Guide</button>
+                    </div>
+
+                    <!-- Benchmark Estimates Outside of Dropdown -->
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-bolt text-amber-400"></i> Quick Benchmark Presets:</span>
+                            <span class="text-[10px] text-slate-400">Click to apply standard profiles</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyBenchmark('unit')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-building"></i> Unit / Apartment
+                            </button>
+                            <button onclick="applyBenchmark('house')" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-house"></i> House / Freehold
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Customise Accordion -->
+                    <details class="group">
+                        <summary class="flex items-center justify-between cursor-pointer select-none py-1.5 px-3 rounded-lg bg-slate-900 border border-slate-700 text-xs font-medium text-slate-300 hover:text-white">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-sky-400"></i> Click to Customise Individual Holding Costs
+                            </span>
+                            <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-xs text-slate-400"></i>
+                        </summary>
+
+                        <div class="space-y-3 pt-3">
+                            <!-- Itemised Fields Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <!-- Strata / Body Corporate -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Body Corporate / Strata</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-strata" value="100" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-strata" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="weekly" selected>$/wk</option>
+                                            <option value="monthly">$/mo</option>
+                                            <option value="annual">$/yr</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Council Rates -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Council Rates</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-council" value="2300" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-council" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="quarterly">$/qtr</option>
+                                            <option value="monthly">$/mo</option>
+                                            <option value="annual" selected>$/yr</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Water Fixed Rates -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Water Fixed Rates</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-water" value="1300" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-water" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="quarterly">$/qtr</option>
+                                            <option value="monthly">$/mo</option>
+                                            <option value="annual" selected>$/yr</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Insurance -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Building / Landlord Insurance</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-insurance" value="500" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-insurance" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="annual" selected>$/yr</option>
+                                            <option value="monthly">$/mo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Maintenance -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Maintenance Fund Reserve</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-maintenance" value="500" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-maintenance" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="monthly">$/mo</option>
+                                            <option value="annual" selected>$/yr</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Utilities -->
+                                <div id="utilities-wrapper">
+                                    <label class="block text-slate-400 mb-1">Power / Gas / Internet</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="inp-utilities" value="4000" oninput="calculateAll()" 
+                                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                                        <select id="freq-utilities" onchange="calculateAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+                                            <option value="monthly">$/mo</option>
+                                            <option value="quarterly">$/qtr</option>
+                                            <option value="annual" selected>$/yr</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Personal Budget Baseline -->
+                    <div class="pt-3 border-t border-slate-700">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">General Living Expenses Baseline ($/mo)</label>
+                        <input type="number" id="inp-personal-living" value="2200" oninput="calculateAll()" 
+                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-sky-500 focus:outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">Groceries, fuel, vehicle costs, dining out, subscriptions & personal leisure.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VISUALISATION & BREAKDOWN PANEL (7 COLS) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- CHART 1: CASH FLOW PIE CHART -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2 text-sm sm:text-base">
+                            <i class="fa-solid fa-chart-pie text-sky-400"></i> Monthly Cash Flow Allocation
+                        </h2>
+                        <span id="badge-cashflow-status" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-900/80 text-emerald-300">
+                            Positive Cash Flow
+                        </span>
+                    </div>
+
+                    <!-- Chart Canvas Container -->
+                    <div class="relative h-64 sm:h-72 w-full flex justify-center items-center">
+                        <canvas id="chartCashFlow"></canvas>
+                    </div>
+
+                    <!-- Summary Table -->
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-700/60">
+                        <div class="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                            <span class="text-slate-400 block">Total Monthly Inflows</span>
+                            <span id="tbl-total-inflows" class="font-bold text-emerald-400 text-sm">$0</span>
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                            <span class="text-slate-400 block">Total Monthly Outflows</span>
+                            <span id="tbl-total-outflows" class="font-bold text-rose-400 text-sm">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHART 2: MORTGAGE AMORTISATION COMPARISON -->
+                <div class="p-5 rounded-2xl bg-slate-800/90 border border-slate-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2 text-sm sm:text-base">
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i> Mortgage Payoff Curve (Offset + DHOAS Horizon Impact)
+                        </h2>
+                    </div>
+
+                    <!-- Chart Canvas Container -->
+                    <div class="relative h-64 sm:h-72 w-full">
+                        <canvas id="chartAmortization"></canvas>
+                    </div>
+
+                    <p class="text-xs text-slate-400 text-center">
+                        Green line demonstrates accelerated loan freedom using Offset balance, Weekly Offset Additions, Extra Repayments, and DHOAS principal reinvestment.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- FOOTER & REGULATORY DISCLAIMERS & COLLAPSIBLE COMMERCIAL NOTICE -->
+        <footer class="mt-12 pt-8 border-t border-slate-800 text-slate-400 text-xs space-y-6">
+            
+            <!-- Collapsible Commercial Use & Support Notice -->
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <details class="group">
+                    <summary class="flex justify-between items-center cursor-pointer font-bold text-amber-400 select-none">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-briefcase"></i> Commercial Use & Support Notice (Click to Expand License)
+                        </span>
+                        <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-xs"></i>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-800 space-y-3 text-slate-300 leading-relaxed">
+                        <p>
+                            Copyright (c) 2026 Craftimia.Dev
+                        </p>
+                        <p>
+                            This software was built to help ADF personnel and their families navigate DHOAS subsidies. It is completely open-source and free to share in the community.
+                        </p>
+                        <p class="font-bold text-amber-300">
+                            STANDARD MIT LEGAL LICENSE
+                        </p>
+                        <p>
+                            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+                        </p>
+                        <p>
+                            The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+                        </p>
+                        <p class="text-[11px] text-slate-400 font-mono">
+                            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+                        </p>
+                    </div>
+                </details>
+            </div>
+
+            <!-- HOW TO AUDIT SAFETY DROPDOWN (PLACED DIRECTLY BELOW COMMERCIAL NOTICE) -->
+            <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <details class="group">
+                    <summary class="flex justify-between items-center cursor-pointer font-bold text-emerald-400 select-none">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-shield-cat"></i> 🕵️‍♂️ How to Audit the Calculator's Safety (Click to Expand Guide)
+                        </span>
+                        <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-xs"></i>
+                    </summary>
+                    <div class="mt-4 pt-4 border-t border-slate-800 space-y-4 text-slate-300 leading-relaxed text-xs">
+                        <p class="text-slate-400 italic">
+                            You can complete this audit in under two minutes by following these steps:
+                        </p>
+
+                        <!-- GitHub Source Code Link Callout -->
+                        <div class="p-3 bg-slate-900 border border-sky-500/30 rounded-xl flex items-center justify-between gap-3">
+                            <div>
+                                <span class="font-semibold text-sky-300 block">Want to review the raw code directly?</span>
+                                <span class="text-[11px] text-slate-400">Inspect all client-side logic, charts, and financial algorithms on GitHub.</span>
+                            </div>
+                            <a href="https://github.com/CraftimiaDev/SmartLoanhq" target="_blank" rel="noopener noreferrer" 
+                               class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-lg shadow transition whitespace-nowrap flex items-center gap-1.5">
+                                <i class="fa-brands fa-github"></i>
+                                <span>Source Code</span>
+                            </a>
+                        </div>
+
+                        <!-- Audit Steps Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                            <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1.5">
+                                <div class="font-bold text-sky-400 flex items-center gap-1.5">
+                                    <span class="w-4 h-4 rounded-full bg-sky-950 border border-sky-800 flex items-center justify-center text-[10px]">1</span>
+                                    Open the Page
+                                </div>
+                                <p class="text-slate-300 text-[11px]">
+                                    Open your web browser (Chrome, Edge, or Brave) and navigate to the calculator landing page.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1.5">
+                                <div class="font-bold text-sky-400 flex items-center gap-1.5">
+                                    <span class="w-4 h-4 rounded-full bg-sky-950 border border-sky-800 flex items-center justify-center text-[10px]">2</span>
+                                    Network Monitor
+                                </div>
+                                <p class="text-slate-300 text-[11px]">
+                                    Press <strong>F12</strong> (or <kbd class="px-1 bg-slate-800 rounded border border-slate-700 text-[10px]">Ctrl + Shift + I</kbd>) to open developer tools, then click the <strong>Network</strong> tab.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1.5">
+                                <div class="font-bold text-sky-400 flex items-center gap-1.5">
+                                    <span class="w-4 h-4 rounded-full bg-sky-950 border border-sky-800 flex items-center justify-center text-[10px]">3</span>
+                                    Filter & Test
+                                </div>
+                                <p class="text-slate-300 text-[11px]">
+                                    Click <strong>Fetch/XHR</strong>. Type dummy inputs into the calculator (e.g. rental income <code class="text-emerald-400">$9,999</code> or loan <code class="text-emerald-400">$1,234,567</code>).
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-1.5">
+                                <div class="font-bold text-sky-400 flex items-center gap-1.5">
+                                    <span class="w-4 h-4 rounded-full bg-sky-950 border border-sky-800 flex items-center justify-center text-[10px]">4</span>
+                                    Verify Traffic
+                                </div>
+                                <p class="text-slate-300 text-[11px]">
+                                    If empty, data is local. If a row appears, check Payload—you'll see no financial figures leaving your device.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Note on Network Logs & Google Sites Hosting -->
+                        <div class="p-3 rounded-lg bg-amber-950/30 border border-amber-800/50 text-[11px] text-amber-300/90 leading-relaxed">
+                            <strong>Note on Network Logs:</strong> Because this tool is hosted on Google Sites, your browser may exchange standard platform telemetry with Google. The actual calculator code, however, executes purely locally in your browser and transmits no financial inputs to any external server.
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-800/80">
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-scale-balanced text-sky-400"></i> 1. General Advice Disclaimer
+                    </h3>
+                    <p class="leading-relaxed">
+                        This tool provides general mathematical estimations and cash flow modelling for educational purposes only. It does not constitute financial, credit, or tax advice. Financial decisions should be reviewed with a licensed mortgage broker or financial adviser.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-building text-amber-400"></i> 2. Affiliation Clearances
+                    </h3>
+                    <p class="leading-relaxed">
+                        This is an independent open-source community tool. It is not affiliated with, sponsored by, or endorsed by the Australian Department of Defence, DVA, DHOAS, Defence Bank, BankAustralia, or any commercial lending institution.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-shield text-emerald-400"></i> 3. Security & Zero Storage
+                    </h3>
+                    <p class="leading-relaxed">
+                        All formulas execute client-side inside JavaScript. No personal military income, posting addresses, loan balances, or user identity details are saved to cookies or remote servers.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800/80 flex flex-wrap justify-between items-center text-[11px] text-slate-400">
+                <span>© 2026 Craftimia.Dev • Built for the Australian Defence Community & Homebuyers. Last Updated: November 2026</span>
+                <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+                    <button onclick="toggleModal('disclaimer-modal')" class="hover:text-slate-300">Detailed Terms</button>
+                    <button onclick="toggleModal('feedback-modal')" class="hover:text-slate-300">Submit Bug / Feedback</button>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- CATEGORY EXPLAINER MODAL -->
+    <div id="explainer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-sky-400"></i> Itemised Holding Costs Explained
+                </h3>
+                <button onclick="toggleModal('explainer-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="text-xs text-slate-300 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">1. Body Corporate / Strata Fees</h4>
+                    <p class="leading-relaxed">This fee is a mandatory contribution paid by all owners in a managed complex to maintain shared infrastructure. It is legally split into two separate bank accounts:</p>
+                    <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-400">
+                        <li><strong>The Administrative Fund:</strong> Covers day-to-day operating costs including common area electricity (lifts, hallways, car parks), lawn mowing, pool cleaning, building manager or caretaker salaries, and basic cleaning supplies.</li>
+                        <li><strong>The Sinking / Capital Works Fund:</strong> A long-term savings pool tucked away to pay for predictable, expensive structural upgrades down the track, such as repainting building facades, replacing lifts, repairing roofing, or repaving driveways.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">2. Council Rates</h4>
+                    <p class="leading-relaxed">Council rates are a property tax levied by your local government municipality to fund community infrastructure and local civic services.</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">3. Water Fixed Rates</h4>
+                    <p class="leading-relaxed">Water bills include fixed access charges and volumetric usage charges. This category specifically refers to the fixed component required to keep your property connected to the main water grid.</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">4. Building / Landlord Insurance</h4>
+                    <p class="leading-relaxed">Safeguards your capital investment against catastrophic structural or financial loss.</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">5. Maintenance Fund Reserve</h4>
+                    <p class="leading-relaxed">Routine repairs and breakdown of items over time including plumbing leaks, hot water system blowouts, fence repairs, or replacing air conditioning units.</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-300 mb-1">6. Power / Gas / Internet</h4>
+                    <p class="leading-relaxed">Standard retail utility bills covering day-to-day energy consumption and digital connectivity.</p>
+                </div>
+            </div>
+            <div class="pt-3 border-t border-slate-800 flex justify-end">
+                <button onclick="toggleModal('explainer-modal')" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg">
+                    Close Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISCLAIMER MODAL -->
+    <div id="disclaimer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-sky-400"></i> Regulatory Terms & Disclaimers
+                </h3>
+                <button onclick="toggleModal('disclaimer-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="text-xs text-slate-300 space-y-3 max-h-96 overflow-y-auto pr-2">
+                <p><strong>1. General Information Only:</strong> The calculations performed by this engine are estimations based on user-provided values and standard financial formulas. Interest rates, loan fees, and tax implications vary by lender and individual financial status.</p>
+                <p><strong>2. DHOAS Subsidy Input:</strong> DHOAS subsidy values are directly entered by the user based on results obtained from the official DHOAS calculator portal.</p>
+                <p><strong>3. Zero Data Logging:</strong> We do not utilise remote backend analytics, user tracking cookies, or financial databases. Your data exists only for the active browser session.</p>
+            </div>
+            <div class="pt-3 border-t border-slate-800 flex justify-end">
+                <button onclick="toggleModal('disclaimer-modal')" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg">
+                    Understood & Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECURE GOOGLE-POWERED FEEDBACK MODAL -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-envelope text-sky-400"></i> Community Feedback
+                </h3>
+                <button onclick="toggleModal('feedback-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSdtIbdNUdLkFHT6a8LcyDd1bYfB-TtP7AR5116BVZr0uwlF4Q/formResponse" 
+                  method="POST" 
+                  target="hidden-iframe" 
+                  onsubmit="handleFormSubmit()" 
+                  class="space-y-3 text-xs">
+                <p class="text-slate-300">Have suggestions for new Defence features, DHOAS rate adjustments, or custom property calculations? Send them securely here:</p>
+                <div>
+                    <label class="block text-slate-400 mb-1">Your Feedback / Ideas</label>
+                    <textarea name="entry.326955045" 
+                              id="feedback-text" 
+                              rows="4" 
+                              required 
+                              class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500" 
+                              placeholder="Type feedback here..."></textarea>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+                    <span id="feedback-status" class="text-[11px] text-emerald-400 hidden font-semibold">Thank you! Your feedback has been sent securely.</span>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg ml-auto">
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
+            <iframe name="hidden-iframe" id="hidden-iframe" style="display:none;"></iframe>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        // GLOBAL STATE
+        let currentOccupancyMode = 'owner';
+        let incomeFrequency = 'monthly';
+        let selectedRepayFreq = 'weekly';
+        let chartCashFlowInstance = null;
+        let chartAmortizationInstance = null;
+
+        const BENCHMARKS = {
+            unit: { strata: 100, strataFreq: 'weekly', council: 2300, councilFreq: 'annual', water: 1300, waterFreq: 'annual', insurance: 500, insFreq: 'annual', maintenance: 500, maintFreq: 'annual', utilities: 4000, utilFreq: 'annual' },
+            house: { strata: 0, strataFreq: 'weekly', council: 2500, councilFreq: 'annual', water: 2000, waterFreq: 'annual', insurance: 3500, insFreq: 'annual', maintenance: 5000, maintFreq: 'annual', utilities: 5500, utilFreq: 'annual' }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            calculateAll();
+        });
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function handleFormSubmit() {
+            const status = document.getElementById('feedback-status');
+            status.classList.remove('hidden');
+            setTimeout(() => {
+                status.classList.add('hidden');
+                document.getElementById('feedback-text').value = '';
+                toggleModal('feedback-modal');
+            }, 1500);
+        }
+
+        function applyBenchmark(type) {
+            const b = BENCHMARKS[type];
+            if (!b) return;
+
+            document.getElementById('inp-strata').value = b.strata;
+            document.getElementById('freq-strata').value = b.strataFreq;
+
+            document.getElementById('inp-council').value = b.council;
+            document.getElementById('freq-council').value = b.councilFreq;
+
+            document.getElementById('inp-water').value = b.water;
+            document.getElementById('freq-water').value = b.waterFreq;
+
+            document.getElementById('inp-insurance').value = b.insurance;
+            document.getElementById('freq-insurance').value = b.insFreq;
+
+            document.getElementById('inp-maintenance').value = b.maintenance;
+            document.getElementById('freq-maintenance').value = b.maintFreq;
+
+            document.getElementById('inp-utilities').value = b.utilities;
+            document.getElementById('freq-utilities').value = b.utilFreq;
+
+            calculateAll();
+        }
+
+        function setOccupancyMode(mode) {
+            currentOccupancyMode = mode;
+            const btnOwner = document.getElementById('btn-mode-owner');
+            const btnRented = document.getElementById('btn-mode-rented');
+            const rentalBlock = document.getElementById('rental-inputs-block');
+            const utilitiesWrapper = document.getElementById('utilities-wrapper');
+
+            if (mode === 'owner') {
+                btnOwner.className = 'px-3 py-1.5 rounded-lg transition-all font-semibold bg-sky-600 text-white shadow';
+                btnRented.className = 'px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white';
+                rentalBlock.classList.add('hidden');
+                utilitiesWrapper.classList.remove('opacity-40');
+            } else {
+                btnRented.className = 'px-3 py-1.5 rounded-lg transition-all font-semibold bg-emerald-600 text-white shadow';
+                btnOwner.className = 'px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white';
+                rentalBlock.classList.remove('hidden');
+                utilitiesWrapper.classList.add('opacity-40');
+            }
+            calculateAll();
+        }
+
+        function setIncomeFreq(freq) {
+            incomeFrequency = freq;
+            const btnMonthly = document.getElementById('btn-income-monthly');
+            const btnFortnightly = document.getElementById('btn-income-fortnightly');
+            const labelSalary = document.getElementById('label-net-salary');
+            const labelAllowances = document.getElementById('label-allowances');
+
+            if (freq === 'fortnightly') {
+                btnFortnightly.className = 'px-2.5 py-1 rounded bg-sky-600 text-white font-semibold';
+                btnMonthly.className = 'px-2.5 py-1 rounded text-slate-400';
+                labelSalary.textContent = 'Net Base Salary ($/fn)';
+                labelAllowances.textContent = 'Allowances ($/fn)';
+            } else {
+                btnMonthly.className = 'px-2.5 py-1 rounded bg-sky-600 text-white font-semibold';
+                btnFortnightly.className = 'px-2.5 py-1 rounded text-slate-400';
+                labelSalary.textContent = 'Net Base Salary ($/mo)';
+                labelAllowances.textContent = 'Allowances ($/mo)';
+            }
+            calculateAll();
+        }
+
+        function setRepayFreq(freq) {
+            selectedRepayFreq = freq;
+            ['monthly', 'fortnightly', 'weekly'].forEach(f => {
+                const btn = document.getElementById(`btn-freq-${f}-repay`);
+                if (f === freq) {
+                    btn.className = 'px-2 py-0.5 rounded bg-sky-600 text-white font-semibold';
+                } else {
+                    btn.className = 'px-2 py-0.5 rounded text-slate-400';
+                }
+            });
+            calculateAll();
+        }
+
+        function getNum(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const val = parseFloat(el.value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function getMonthlyAmount(inputId, freqId) {
+            const val = getNum(inputId);
+            const freq = document.getElementById(freqId) ? document.getElementById(freqId).value : 'monthly';
+            if (freq === 'weekly') return (val * 52) / 12;
+            if (freq === 'quarterly') return (val * 4) / 12;
+            if (freq === 'annual') return val / 12;
+            return val;
+        }
+
+        function calcMonthlyPI(principal, annualRate, years) {
+            if (principal <= 0 || years <= 0) return 0;
+            const r = (annualRate / 100) / 12;
+            const n = years * 12;
+            if (r === 0) return principal / n;
+            return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        }
+
+        function calculateAll() {
+            let rawNetSalary = getNum('inp-net-salary');
+            let rawAllowances = getNum('inp-allowances');
+
+            let netSalaryMonthly = rawNetSalary;
+            let allowancesMonthly = rawAllowances;
+
+            if (incomeFrequency === 'fortnightly') {
+                netSalaryMonthly = (rawNetSalary * 26) / 12;
+                allowancesMonthly = (rawAllowances * 26) / 12;
+            }
+            
+            const purchasePrice = getNum('inp-property-value');
+            const depositAmount = getNum('inp-deposit-amount');
+            const loanAmount = Math.max(0, purchasePrice - depositAmount);
+            document.getElementById('display-gross-loan').textContent = `$${Math.round(loanAmount).toLocaleString()}`;
+
+            const weeklyRent = getNum('inp-weekly-rent');
+            const mgtFeePct = getNum('inp-mgt-fee');
+            const vacancyWeeks = getNum('inp-vacancy-weeks');
+            
+            const effectiveWeeks = Math.max(0, 52 - vacancyWeeks);
+            const grossRentMonthly = (weeklyRent * effectiveWeeks) / 12;
+            const mgtFeeMonthly = grossRentMonthly * (mgtFeePct / 100);
+            const netRentMonthly = grossRentMonthly - mgtFeeMonthly;
+
+            const annualRent = weeklyRent * 52;
+            const grossYield = purchasePrice > 0 ? (annualRent / purchasePrice) * 100 : 0;
+            document.getElementById('kpi-gross-yield').textContent = `Gross Yield: ${grossYield.toFixed(2)}%`;
+
+            const interestRate = getNum('inp-interest-rate');
+            const loanTermYears = getNum('inp-loan-term');
+            const initialOffsetBalance = getNum('inp-offset-balance');
+            const extraRepaymentWeekly = getNum('inp-extra-repayment-weekly');
+            const offsetContributionWeekly = getNum('inp-offset-contribution-weekly');
+            const reinvestDhoas = document.getElementById('inp-reinvest-dhoas').checked;
+
+            // DHOAS Subsidy Guard: Force to 0 if "No DHOAS Subsidy" (Tier 0) is selected
+            const dhoasTier = document.getElementById('inp-dhoas-tier').value;
+            let dhoasMonthlySubsidy = getNum('inp-dhoas-custom-subsidy');
+            if (dhoasTier === '0') {
+                dhoasMonthlySubsidy = 0;
+            }
+
+            const baseMonthlyRepayment = calcMonthlyPI(loanAmount, interestRate, loanTermYears);
+            let dynamicRepayment = baseMonthlyRepayment;
+            let dhoasFreqSubsidy = dhoasMonthlySubsidy;
+            let freqLabel = '/ mo';
+
+            if (selectedRepayFreq === 'fortnightly') {
+                dynamicRepayment = (baseMonthlyRepayment * 12) / 26;
+                dhoasFreqSubsidy = (dhoasMonthlySubsidy * 12) / 26;
+                freqLabel = '/ fn';
+            } else if (selectedRepayFreq === 'weekly') {
+                dynamicRepayment = (baseMonthlyRepayment * 12) / 52;
+                dhoasFreqSubsidy = (dhoasMonthlySubsidy * 12) / 52;
+                freqLabel = '/ wk';
+            }
+
+            document.getElementById('display-dynamic-repayment').textContent = `$${Math.round(dynamicRepayment).toLocaleString()} ${freqLabel}`;
+            document.getElementById('display-dhoas-freq-subsidy').textContent = `+$${Math.round(dhoasFreqSubsidy).toLocaleString()} ${freqLabel}`;
+            document.getElementById('kpi-dhoas-freq-breakdown').textContent = `+$${Math.round(dhoasFreqSubsidy).toLocaleString()} ${freqLabel} added to principal`;
+
+            const extraRepaymentMonthly = (extraRepaymentWeekly * 52) / 12;
+            const offsetContributionMonthly = (offsetContributionWeekly * 52) / 12;
+
+            const strataMonthly = getMonthlyAmount('inp-strata', 'freq-strata');
+            const councilMonthly = getMonthlyAmount('inp-council', 'freq-council');
+            const waterMonthly = getMonthlyAmount('inp-water', 'freq-water');
+            const insuranceMonthly = getMonthlyAmount('inp-insurance', 'freq-insurance');
+            const maintenanceMonthly = getMonthlyAmount('inp-maintenance', 'freq-maintenance');
+            const utilitiesMonthly = (currentOccupancyMode === 'owner') ? getMonthlyAmount('inp-utilities', 'freq-utilities') : 0;
+
+            const totalHoldingCosts = strataMonthly + councilMonthly + waterMonthly + insuranceMonthly + maintenanceMonthly + utilitiesMonthly;
+            const personalLiving = getNum('inp-personal-living');
+
+            // Live-In & Rented Out Cash Flow Calculations
+            const liveInInflows = netSalaryMonthly + allowancesMonthly + dhoasMonthlySubsidy;
+            const liveInOutflows = baseMonthlyRepayment + totalHoldingCosts + personalLiving + extraRepaymentMonthly + offsetContributionMonthly;
+            const liveInSurplus = liveInInflows - liveInOutflows;
+
+            const rentDestination = document.getElementById('inp-rent-destination').value;
+            let rentOutInflows = liveInInflows;
+            if (rentDestination === 'general') {
+                rentOutInflows += netRentMonthly;
+            }
+            const rentOutSurplus = rentOutInflows - liveInOutflows;
+
+            const postingTriggerYears = getNum('inp-posting-trigger');
+            
+            // Update KPI Card UI
+            updateKPICards({
+                currentOccupancyMode,
+                postingTriggerYears,
+                liveInSurplus,
+                rentOutSurplus,
+                totalHoldingCosts,
+                dhoasMonthlySubsidy
+            });
+
+            document.getElementById('tbl-total-inflows').textContent = `$${Math.round(currentOccupancyMode === 'rented' && postingTriggerYears === 0 ? rentOutInflows : liveInInflows).toLocaleString()} / mo`;
+            document.getElementById('tbl-total-outflows').textContent = `$${Math.round(liveInOutflows).toLocaleString()} / mo`;
+
+            const postingTriggerMonths = postingTriggerYears * 12;
+            const dhoasMaxYears = getNum('inp-dhoas-years');
+            const dhoasMaxMonths = dhoasMaxYears * 12;
+
+            const amortResults = runAmortizationSimulation({
+                loanAmount,
+                interestRate,
+                loanTermYears,
+                initialOffsetBalance,
+                offsetContributionWeekly,
+                baseMonthlyRepayment,
+                extraRepaymentMonthly,
+                dhoasMonthlySubsidy,
+                reinvestDhoas,
+                postingTriggerMonths,
+                dhoasMaxMonths,
+                netRentMonthly,
+                rentDestination,
+                holdingCostsBase: (strataMonthly + councilMonthly + waterMonthly + insuranceMonthly + maintenanceMonthly)
+            });
+
+            const activeSurplusForChart = (currentOccupancyMode === 'rented' && postingTriggerYears === 0) ? rentOutSurplus : liveInSurplus;
+            
+            // Update Monthly Cash Flow Allocation Status Badge dynamically based on positivity/negativity
+            const badgeStatus = document.getElementById('badge-cashflow-status');
+            if (activeSurplusForChart >= 0) {
+                badgeStatus.textContent = 'Positive Cash Flow';
+                badgeStatus.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-900/80 text-emerald-300';
+            } else {
+                badgeStatus.textContent = 'Negative Cash Flow';
+                badgeStatus.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-rose-900/80 text-rose-300';
+            }
+
+            updateCashFlowChart({
+                baseMonthlyRepayment,
+                totalHoldingCosts,
+                personalLiving,
+                extraRepaymentMonthly,
+                offsetContributionMonthly,
+                netSurplus: activeSurplusForChart
+            });
+
+            updateAmortizationChart(amortResults.standardCurve, amortResults.acceleratedCurve, amortResults.offsetCurve);
+        }
+
+        function updateKPICards(opts) {
+            const { currentOccupancyMode, postingTriggerYears, liveInSurplus, rentOutSurplus, totalHoldingCosts, dhoasMonthlySubsidy } = opts;
+            
+            const singleView = document.getElementById('kpi-single-view');
+            const splitView = document.getElementById('kpi-split-view');
+            const titleEl = document.getElementById('kpi-cashflow-title');
+            const singleSurplusEl = document.getElementById('kpi-single-surplus');
+            const iconWrapper = document.getElementById('cashflow-status-icon-wrapper');
+
+            let activeSurplus = 0;
+
+            if (currentOccupancyMode === 'owner' || (currentOccupancyMode === 'rented' && postingTriggerYears === 0)) {
+                singleView.classList.remove('hidden');
+                splitView.classList.add('hidden');
+
+                if (currentOccupancyMode === 'owner') {
+                    titleEl.textContent = 'Net Monthly Cashflow';
+                    activeSurplus = liveInSurplus;
+                } else {
+                    titleEl.textContent = 'Rented Out Net Cash Flow';
+                    activeSurplus = rentOutSurplus;
+                }
+                singleSurplusEl.textContent = `${activeSurplus >= 0 ? '+' : ''}$${Math.round(activeSurplus).toLocaleString()} / mo`;
+                // Green when positive, red when negative
+                singleSurplusEl.className = `text-2xl font-bold ${activeSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            } else {
+                titleEl.textContent = 'Net Monthly Cashflow (Phased)';
+                singleView.classList.add('hidden');
+                splitView.classList.remove('hidden');
+
+                document.getElementById('label-split-live').textContent = 'Live-In';
+                document.getElementById('label-split-rent').textContent = 'Rented Out';
+
+                const elLiveIn = document.getElementById('kpi-livein-surplus');
+                const elRent = document.getElementById('kpi-post-surplus');
+
+                elLiveIn.textContent = `${liveInSurplus >= 0 ? '+' : ''}$${Math.round(liveInSurplus).toLocaleString()} / mo`;
+                elLiveIn.className = `text-lg font-bold ${liveInSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+                elRent.textContent = `${rentOutSurplus >= 0 ? '+' : ''}$${Math.round(rentOutSurplus).toLocaleString()} / mo`;
+                elRent.className = `text-lg font-bold ${rentOutSurplus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+                activeSurplus = liveInSurplus; // Primary indicator reflects initial phase
+            }
+
+            // Render Green Check Tick or Red Triangle Warning
+            if (activeSurplus >= 0) {
+                iconWrapper.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base" title="Positive Cash Flow"></i>`;
+            } else {
+                iconWrapper.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 text-base animate-pulse" title="Negative Cash Flow Warning"></i>`;
+            }
+
+            document.getElementById('kpi-holding-costs').textContent = `$${Math.round(totalHoldingCosts).toLocaleString()} / mo`;
+            document.getElementById('kpi-dhoas-subsidy').textContent = `$${Math.round(dhoasMonthlySubsidy).toLocaleString()} / mo`;
+        }
+
+        function runAmortizationSimulation(opts) {
+            const {
+                loanAmount,
+                interestRate,
+                loanTermYears,
+                initialOffsetBalance,
+                offsetContributionWeekly,
+                baseMonthlyRepayment,
+                extraRepaymentMonthly,
+                dhoasMonthlySubsidy,
+                reinvestDhoas,
+                postingTriggerMonths,
+                dhoasMaxMonths,
+                netRentMonthly,
+                rentDestination,
+                holdingCostsBase
+            } = opts;
+
+            const monthlyRate = (interestRate / 100) / 12;
+            const totalMonths = loanTermYears * 12;
+
+            let standardBalance = loanAmount;
+            let standardCurve = [standardBalance];
+            let standardTotalInterest = 0;
+
+            for (let m = 1; m <= totalMonths; m++) {
+                if (standardBalance <= 0) {
+                    standardCurve.push(0);
+                    continue;
+                }
+                const interestPayment = standardBalance * monthlyRate;
+                standardTotalInterest += interestPayment;
+                const principalPayment = baseMonthlyRepayment - interestPayment;
+                standardBalance = Math.max(0, standardBalance - principalPayment);
+                if (m % 12 === 0) standardCurve.push(Math.round(standardBalance));
+            }
+
+            let accelBalance = loanAmount;
+            let currentOffset = initialOffsetBalance;
+            const monthlyOffsetAdd = (offsetContributionWeekly * 52) / 12;
+            let acceleratedCurve = [accelBalance];
+            let offsetCurve = [currentOffset];
+            let accelTotalInterest = 0;
+            let actualMonthsPaid = totalMonths;
+
+            for (let m = 1; m <= totalMonths; m++) {
+                if (accelBalance <= 0) {
+                    if (actualMonthsPaid === totalMonths) actualMonthsPaid = m - 1;
+                    acceleratedCurve.push(0);
+                    offsetCurve.push(Math.round(currentOffset));
+                    continue;
+                }
+
+                currentOffset += monthlyOffsetAdd;
+                const effectiveBalanceForInterest = Math.max(0, accelBalance - currentOffset);
+                const interestPayment = effectiveBalanceForInterest * monthlyRate;
+                accelTotalInterest += interestPayment;
+
+                const isDhoasActive = m <= dhoasMaxMonths;
+                const currentMonthSubsidy = isDhoasActive ? dhoasMonthlySubsidy : 0;
+
+                const isRentedOut = m > postingTriggerMonths;
+                let rentalSurplusNet = Math.max(0, netRentMonthly - holdingCostsBase);
+                
+                let rentalExtraPaydown = 0;
+
+                if (isRentedOut) {
+                    if (rentDestination === 'principal') {
+                        rentalExtraPaydown = rentalSurplusNet;
+                    } else if (rentDestination === 'offset') {
+                        currentOffset += rentalSurplusNet;
+                    }
+                }
+
+                const monthlyExtraAdd = extraRepaymentMonthly + (reinvestDhoas ? currentMonthSubsidy : 0) + rentalExtraPaydown;
+                const totalPaidThisMonth = baseMonthlyRepayment + monthlyExtraAdd;
+                const principalPayment = totalPaidThisMonth - interestPayment;
+
+                accelBalance = Math.max(0, accelBalance - principalPayment);
+                if (m % 12 === 0) {
+                    acceleratedCurve.push(Math.round(accelBalance));
+                    offsetCurve.push(Math.round(currentOffset));
+                }
+            }
+
+            const totalInterestSaved = Math.max(0, standardTotalInterest - accelTotalInterest);
+            const monthsSaved = Math.max(0, totalMonths - actualMonthsPaid);
+            const yearsSaved = (monthsSaved / 12).toFixed(1);
+
+            document.getElementById('kpi-interest-saved').textContent = `$${Math.round(totalInterestSaved).toLocaleString()}`;
+            document.getElementById('kpi-time-saved').textContent = `Paid off ${yearsSaved} yrs early (${actualMonthsPaid} mo total)`;
+
+            return { standardCurve, acceleratedCurve, offsetCurve };
+        }
+
+        function initCharts() {
+            const ctx1 = document.getElementById('chartCashFlow').getContext('2d');
+            chartCashFlowInstance = new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: ['Mortgage P&I', 'Holding Costs', 'Living Expenses', 'Extra Repayments & Offset', 'Net Surplus / Buffer'],
+                    datasets: [{
+                        data: [1, 1, 1, 1, 1],
+                        backgroundColor: [
+                            '#f43f5e',
+                            '#0284c7',
+                            '#64748b',
+                            '#8b5cf6',
+                            '#10b981'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0f172a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#cbd5e1', font: { size: 11 }, boxWidth: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = Math.round(context.raw);
+                                    return ` ${context.label}: $${val.toLocaleString()} / mo`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('chartAmortization').getContext('2d');
+            chartAmortizationInstance = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 31}, (_, i) => `Yr ${i}`),
+                    datasets: [
+                        {
+                            label: 'Standard Amortisation',
+                            data: [],
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Accelerated Loan Balance',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 2
+                        },
+                        {
+                            label: 'Offset Account Balance',
+                            data: [],
+                            borderColor: '#38bdf8',
+                            borderWidth: 2,
+                            pointRadius: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: $${Math.round(context.raw).toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8', callback: v => '$' + (v/1000) + 'k' }
+                        },
+                        x: {
+                            grid: { color: '#1e293b' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCashFlowChart(data) {
+            if (!chartCashFlowInstance) return;
+            const combinedExtrasAndOffset = data.extraRepaymentMonthly + data.offsetContributionMonthly;
+            chartCashFlowInstance.data.datasets[0].data = [
+                Math.round(data.baseMonthlyRepayment),
+                Math.round(data.totalHoldingCosts),
+                Math.round(data.personalLiving),
+                Math.round(combinedExtrasAndOffset),
+                Math.max(0, Math.round(data.netSurplus))
+            ];
+            chartCashFlowInstance.update();
+        }
+
+        function updateAmortizationChart(standardCurve, acceleratedCurve, offsetCurve) {
+            if (!chartAmortizationInstance) return;
+            chartAmortizationInstance.data.datasets[0].data = standardCurve;
+            chartAmortizationInstance.data.datasets[1].data = acceleratedCurve;
+            chartAmortizationInstance.data.datasets[2].data = offsetCurve;
+            chartAmortizationInstance.update();
+        }
+    </script>
+
+    <!-- Buy Me a Coffee Floating Widget Script -->
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="Craftimia.Dev" data-description="Support me on Buy me a coffee!" data-message="" data-color="#40DCA5" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+</body>
+</html>
