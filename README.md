@@ -1,6 +1,6 @@
-# 🛠️ SmartLoanhq: Granular Cash Flow & Amortization Modeling
+# 🛠️ SmartLibreLoan: Granular Cash Flow & Amortization Modeling
 
-Welcome to **SmartLoanhq** This is an independent, open-source community tool designed to help ADF members and property buyers accurately model their true holding costs, amortisation schedules, and property cash flows in a centralised dashboard.
+Welcome to **SmartLibreLoan** This is an independent, open-source community tool designed to help ADF members and property buyers accurately model their true holding costs, amortisation schedules, and property cash flows in a centralised dashboard.
 
 ---
 
